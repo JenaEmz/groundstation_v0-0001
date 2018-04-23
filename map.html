@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>地面站</title>
+    <link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css"/>
+    <script type="text/javascript"
+            src="http://webapi.amap.com/maps?v=1.4.6&key=1a3842ec7e93b1b706fe77f23dd21264"></script>
+    <script src="http://cache.amap.com/lbs/static/es5.min.js"></script>
+    <script src="./qwebchannel.js"></script>
+    <script src="http://webapi.amap.com/ui/1.0/main.js?v=1.0.11"></script>
+</head>
+<body>
+<div id="container"></div>
+<style>
+        .marker {
+            color: #ff6600;
+            padding: 4px 10px;
+            border: 1px solid #fff;
+            white-space: nowrap;
+            font-size: 12px;
+            font-family: "";
+            background-color: #0066ff;
+        }
+    </style>
+<script type="text/javascript">
+    //初始化地图对象，加载地图
+    function addUAV() {
+        UAV = new AMap.Marker({
+            icon: "http://webapi.amap.com/theme/v1.3/markers/n/mark_b.png",
+            position: [121.424048,31.145317]
+        });
+        UAV.setMap(map);
+    }
+
+    function updateUAV(lat,lon) {
+        // 自定义点标记内容
+        var markerContent = document.createElement("div");
+
+        // 点标记中的图标
+        var markerImg = document.createElement("img");
+        markerImg.className = "markerlnglat";
+        markerImg.src = "http://webapi.amap.com/theme/v1.3/markers/n/mark_b.png";
+        markerContent.appendChild(markerImg);
+
+        // 点标记中的文本
+        var markerSpan = document.createElement("span");
+        markerSpan.className = 'marker';
+        markerSpan.innerHTML = "无人机现在所在地";
+        markerContent.appendChild(markerSpan);
+	if (currentPath.length>500)
+	{
+	    currentPath.shift()
+	}
+	currentPath.push[lat, lon];
+        UAV.setContent(markerContent); //更新点标记内容
+        UAV.setPosition([lat, lon]); //更新点标记位置
+    }
+
+    function addWaypoint()
+    {
+	var waypointSet = false
+	map.setDefaultCursor("crosshair"); 	
+	AMap.event.addListenerOnce(map, 'click',function(e) {
+        setWaypointPos(e.lnglat.getLng(),e.lnglat.getLat());
+	map.setDefaultCursor("pointer"); 
+	waypointSet = true
+	    });
+	while (waypointSet = false){
+	}
+	return [tar_lat,tar_lon];
+
+    }
+    function setWaypointPos(lon,lat){
+	tar_lat = lat
+	tar_lon = lon
+	if (waypoint !=null){
+	    map.remove(waypoint)
+	}
+	waypoint = new AMap.Marker({
+            icon: "https://webapi.amap.com/theme/v1.3/markers/n/end.png",
+            position: [lon, lat]
+        });
+	
+        waypoint.setMap(map);
+    }
+    var UAV,waypoint
+    var tar_lat,tar_lon
+    var map = new AMap.Map('container', {
+        resizeEnable: true,
+        zoom:20,
+        center: [121.424048,31.145317]
+    });
+    addUAV()
+    var currentPath = [[121.424048,31.145317]]
+   AMapUI.load(['ui/misc/PathSimplifier'], function(PathSimplifier) {
+
+    initPage(PathSimplifier);
+});
+var pathSimplifierIns
+function initPage(PathSimplifier) {
+    //创建组件实例
+    pathSimplifierIns = new PathSimplifier({
+        zIndex: 30,
+        map: map, //所属的地图实例
+        getPath: function(pathData, pathIndex) {
+            //返回轨迹数据中的节点坐标信息，[AMap.LngLat, AMap.LngLat...] 或者 [[lng|number,lat|number],...]
+            return pathData.path;
+        },
+        renderOptions: {
+            //轨迹线的样式
+            pathLineStyle: {
+                strokeStyle: 'red',
+                lineWidth: 1,
+                dirArrowStyle: true
+            }
+        }
+    });
+	
+    //这里构建两条简单的轨迹，仅作示例
+    pathSimplifierIns.setData([{
+        name: '轨迹0',
+        path:currentPath
+    }]);
+
+    //创建一个巡航器
+    var navg0 = pathSimplifierIns.createPathNavigator(0, //关联第1条轨迹
+        {
+            loop: true, //循环播放
+            speed: 4
+        });
+
+    navg0.start();
+}
+</script>
+
+</body>
+</html>
